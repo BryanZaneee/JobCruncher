@@ -204,7 +204,7 @@
       transition: max-height 0.3s ease, opacity 0.25s ease;
     }
     .job-card.expanded .job-details {
-      max-height: 280px;
+      max-height: 500px;
       opacity: 1;
     }
     .job-details-inner {
@@ -212,26 +212,25 @@
       border-top: 1px solid #f5f5f4;
     }
 
-    /* ── Detail Rows ── */
-    .detail-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px 14px;
+    /* ── Detail Fields ── */
+    .detail-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .detail-field {
       padding: 6px 0;
       border-bottom: 1px solid #fafaf9;
       font-size: 12px;
-      color: #57534e;
     }
-    .detail-row:last-of-type { border-bottom: none; }
-
     .detail-label {
       font-size: 10px;
       font-weight: 600;
       color: #a8a29e;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      width: 100%;
-      margin-bottom: -2px;
+      display: block;
+      margin-bottom: 1px;
     }
     .detail-value {
       font-size: 12px;
@@ -249,6 +248,49 @@
     .detail-value.no-salary {
       color: #a8a29e;
       font-style: italic;
+    }
+
+    /* ── Benefits Dropdown ── */
+    .benefits-dropdown {
+      margin-top: 4px;
+      border: 1px solid #e7e5e4;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .benefits-dropdown summary {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #44403c;
+      cursor: pointer;
+      background: #fafaf9;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .benefits-dropdown summary:hover { background: #f5f5f4; }
+    .benefits-dropdown summary::before {
+      content: '▸';
+      font-size: 9px;
+      color: #a8a29e;
+      transition: transform 0.2s ease;
+    }
+    .benefits-dropdown[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .benefits-dropdown summary::-webkit-details-marker { display: none; }
+    .benefits-list {
+      padding: 6px 10px 8px 24px;
+      margin: 0;
+      font-size: 11px;
+      color: #57534e;
+      line-height: 1.6;
+    }
+    .benefits-list li {
+      list-style: disc;
     }
 
     .detail-tag {

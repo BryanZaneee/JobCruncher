@@ -119,48 +119,80 @@ function renderJobs(jobs) {
     const elapsed = escapeHtml(timeSinceApplied(job.date));
     const salaryDisplay = salary || 'No salary listed';
 
-    // Build detail rows — only include rows that have data
+    // Build labeled detail fields
     let detailRows = '';
 
-    // Compensation row
-    detailRows += `<div class="detail-row">
+    // Salary
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Salary</span>
       <span class="detail-value ${salary ? 'salary' : 'no-salary'}">${salaryDisplay}</span>
-      ${applicants ? `<span class="detail-value">${applicants}</span>` : ''}
     </div>`;
 
-    // Qualifications row
-    if (seniority || education) {
-      detailRows += `<div class="detail-row">
-        ${seniority ? `<span class="detail-value">${seniority}</span>` : ''}
-        ${seniority && education ? `<span class="detail-value" style="color:#d6d3d1">·</span>` : ''}
-        ${education ? `<span class="detail-value">${education}</span>` : ''}
+    // Applicants
+    if (applicants) {
+      detailRows += `<div class="detail-field">
+        <span class="detail-label">Applicants</span>
+        <span class="detail-value">${applicants}</span>
       </div>`;
     }
 
-    // Benefits row
-    if (benefits) {
-      detailRows += `<div class="detail-row">
-        <span class="detail-label">Benefits</span>
-        <span class="detail-value">${benefits}</span>
+    // Experience level
+    if (seniority) {
+      detailRows += `<div class="detail-field">
+        <span class="detail-label">Experience Level</span>
+        <span class="detail-value">${seniority}</span>
       </div>`;
     }
 
-    // Hiring team row
+    // Education
+    if (education) {
+      detailRows += `<div class="detail-field">
+        <span class="detail-label">Education</span>
+        <span class="detail-value">${education}</span>
+      </div>`;
+    }
+
+    // Work type
+    if (workType) {
+      detailRows += `<div class="detail-field">
+        <span class="detail-label">Work Type</span>
+        <span class="detail-value">${workType}</span>
+      </div>`;
+    }
+
+    // Days since applied
+    if (elapsed) {
+      detailRows += `<div class="detail-field">
+        <span class="detail-label">Applied</span>
+        <span class="detail-value">${elapsed}</span>
+      </div>`;
+    }
+
+    // Hiring team
     if (hiringTeam) {
       const hiringHtml = hiringTeamUrl
         ? `<a href="${hiringTeamUrl}" target="_blank">${hiringTeam}</a>`
         : hiringTeam;
-      detailRows += `<div class="detail-row">
-        <span class="detail-label">Hiring contact</span>
+      detailRows += `<div class="detail-field">
+        <span class="detail-label">Hiring Contact</span>
         <span class="detail-value">${hiringHtml}</span>
       </div>`;
     }
 
-    // Metadata row
-    detailRows += `<div class="detail-row">
-      ${workType ? `<span class="detail-tag">${workType}</span>` : ''}
-      <span class="detail-value" style="font-size:11px;color:#a8a29e">${date}</span>
+    // Date saved
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Date Saved</span>
+      <span class="detail-value" style="color:#a8a29e">${date}</span>
     </div>`;
+
+    // Benefits dropdown
+    const benefitsHtml = benefits ? `
+      <details class="benefits-dropdown">
+        <summary>Benefits</summary>
+        <ul class="benefits-list">
+          ${benefits.split(', ').map(b => `<li>${escapeHtml(b)}</li>`).join('')}
+        </ul>
+      </details>` : '';
 
     const sourceIcon = source === 'LinkedIn' ? LINKEDIN_ICON : source === 'Indeed' ? INDEED_ICON : '';
 
@@ -178,7 +210,8 @@ function renderJobs(jobs) {
         </div>
         <div class="job-details">
           <div class="job-details-inner">
-            ${detailRows}
+            <div class="detail-fields">${detailRows}</div>
+            ${benefitsHtml}
             <div class="detail-actions">
               <div class="detail-actions-left">
                 <label>Status</label>
