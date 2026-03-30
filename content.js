@@ -1,15 +1,23 @@
 (() => {
+  function cleanText(text) {
+    return (text || '')
+      .replace(/\bPromoted by hirer\b/gi, '')
+      .replace(/\bPromoted\b/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
   function extractLinkedInJob() {
-    const title = document.querySelector(
+    const title = cleanText(document.querySelector(
       '.job-details-jobs-unified-top-card__job-title h1, ' +
       '.job-details-jobs-unified-top-card__job-title a, ' +
       'h1.t-24'
-    )?.textContent?.trim() || '';
+    )?.textContent?.trim());
 
-    const company = document.querySelector(
+    const company = cleanText(document.querySelector(
       '.job-details-jobs-unified-top-card__company-name a, ' +
       '.job-details-jobs-unified-top-card__company-name'
-    )?.textContent?.trim() || '';
+    )?.textContent?.trim());
 
     const descContainer = document.querySelector(
       '.job-details-jobs-unified-top-card__primary-description-without-tagline, ' +
@@ -18,7 +26,7 @@
     const spans = descContainer
       ? Array.from(descContainer.querySelectorAll('span')).map(s => s.textContent.trim())
       : [];
-    const location = spans[0] || '';
+    const location = cleanText(spans[0]);
 
     const rightPanel = document.querySelector('.jobs-search__job-details');
     const allText = rightPanel?.textContent || document.body.textContent;
@@ -26,6 +34,14 @@
       /\$[\d,]+[kK]?(?:\/yr|\/hour|\/mo)?(?:\s*[-–]\s*\$[\d,]+[kK]?(?:\/yr|\/hour|\/mo)?)?/
     );
     const salary = salaryMatch ? salaryMatch[0] : '';
+
+    // Extract applicant count (e.g. "200 applicants", "Over 100 applicants", "Be among the first 25 applicants")
+    const applicantMatch = allText.match(
+      /(?:over\s+)?([\d,]+)\s+applicants?/i
+    ) || allText.match(
+      /(?:be among the first\s+)([\d,]+)\s+applicants?/i
+    );
+    const applicants = applicantMatch ? applicantMatch[0].trim() : '';
 
     const hiringTeamSection = Array.from(document.querySelectorAll('h2, h3'))
       .find(h => h.textContent.includes('Meet the hiring team'));
@@ -35,17 +51,39 @@
       const parent = hiringTeamSection.closest('section') || hiringTeamSection.parentElement;
       const nameEl = parent?.querySelector('.jobs-poster__name a, a[href*="/in/"]');
       const titleEl = parent?.querySelector('.jobs-poster__headline, .t-black--light');
-      hiringTeam = nameEl?.textContent?.trim() || '';
+      hiringTeam = cleanText(nameEl?.textContent?.trim());
       if (nameEl?.href) {
         hiringTeamUrl = nameEl.href.split('?')[0];
       }
-      if (titleEl) hiringTeam += ' - ' + titleEl.textContent.trim();
+      if (titleEl) hiringTeam += ' - ' + cleanText(titleEl.textContent.trim());
     }
 
     const tags = Array.from(
       document.querySelectorAll('.job-details-jobs-unified-top-card__job-insight span.ui-label')
-    ).map(s => s.textContent.trim());
+    ).map(s => cleanText(s.textContent.trim())).filter(Boolean);
     const workType = tags.join(', ');
+
+    // LinkedIn Premium insights: education level and seniority
+    // These appear in the job insights section, often as list items or spans
+    const insightEls = Array.from(document.querySelectorAll(
+      '.job-details-jobs-unified-top-card__job-insight, ' +
+      '.jobs-premium-applicant-insights li, ' +
+      '.job-details-how-you-match__skills-item, ' +
+      '.jobs-description__salary-compensation-insights li'
+    ));
+    const insightText = insightEls.map(el => el.textContent.trim()).join(' ');
+    // Also check the full panel text for these
+    const fullInsightText = insightText + ' ' + allText;
+
+    const educationMatch = fullInsightText.match(
+      /(?:Bachelor|Master|Associate|Doctoral|PhD|High school|MBA|Bachelor's|Master's|Associate's)[^.;,\n]*/i
+    );
+    const education = educationMatch ? cleanText(educationMatch[0]) : '';
+
+    const seniorityMatch = fullInsightText.match(
+      /(?:Entry[\s-]?level|Associate|Mid[\s-]?Senior[\s-]?level|Senior[\s-]?level|Director|Executive|Internship|Not Applicable)/i
+    );
+    const seniority = seniorityMatch ? cleanText(seniorityMatch[0]) : '';
 
     return {
       id: crypto.randomUUID(),
@@ -53,6 +91,9 @@
       company,
       location,
       salary,
+      applicants,
+      education,
+      seniority,
       hiringTeam,
       hiringTeamUrl,
       workType,
@@ -63,23 +104,23 @@
   }
 
   function extractIndeedJob() {
-    const title = document.querySelector(
+    const title = cleanText(document.querySelector(
       'h2.jobsearch-JobInfoHeader-title, ' +
       '.jobsearch-JobInfoHeader-title, ' +
       'h1[data-testid="jobsearch-JobInfoHeader-title"]'
-    )?.textContent?.trim() || '';
+    )?.textContent?.trim());
 
-    const company = document.querySelector(
+    const company = cleanText(document.querySelector(
       '[data-testid="inlineHeader-companyName"] a, ' +
       '.jobsearch-InlineCompanyRating a, ' +
       '.css-1h46us2'
-    )?.textContent?.trim() || '';
+    )?.textContent?.trim());
 
-    const location = document.querySelector(
+    const location = cleanText(document.querySelector(
       '[data-testid="inlineHeader-companyLocation"], ' +
       '[data-testid="job-location"], ' +
       '.jobsearch-JobInfoHeader-subtitle .css-1restlb'
-    )?.textContent?.trim() || '';
+    )?.textContent?.trim());
 
     const salaryEl = document.querySelector(
       '#salaryInfoAndJobType .css-1g1y608, ' +
@@ -92,10 +133,15 @@
     let hiringTeamUrl = '';
     const hireEl = document.querySelector('.jobsearch-HiringInsights-entry');
     if (hireEl) {
-      hiringTeam = hireEl.textContent.trim();
+      hiringTeam = cleanText(hireEl.textContent.trim());
       const hireLink = hireEl.querySelector('a[href]');
       if (hireLink) hiringTeamUrl = hireLink.href.split('?')[0];
     }
+
+    // Indeed sometimes shows applicant count in hiring insights
+    const pageText = document.body.textContent;
+    const applicantMatch = pageText.match(/(?:over\s+)?([\d,]+)\s+applicants?/i);
+    const applicants = applicantMatch ? applicantMatch[0].trim() : '';
 
     return {
       id: crypto.randomUUID(),
@@ -103,6 +149,9 @@
       company,
       location,
       salary,
+      applicants,
+      education: '',
+      seniority: '',
       hiringTeam,
       hiringTeamUrl,
       workType: '',

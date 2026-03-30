@@ -6,6 +6,23 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function timeSinceApplied(dateStr) {
+  if (!dateStr) return '';
+  const applied = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  const diffMs = now - applied;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days === 0) return 'Today';
+  if (days === 1) return '1 day ago';
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return '1 week ago';
+  if (days < 30) return `${weeks} weeks ago`;
+  const months = Math.floor(days / 30);
+  if (months === 1) return '1 month ago';
+  return `${months} months ago`;
+}
+
 function parseSalaryNumber(salaryStr) {
   if (!salaryStr) return 0;
   const match = salaryStr.match(/\$?([\d,]+)/);
@@ -83,6 +100,11 @@ function renderJobs(jobs) {
     const workType = escapeHtml(job.workType);
     const date = escapeHtml(job.date);
 
+    const applicants = escapeHtml(job.applicants);
+    const education = escapeHtml(job.education);
+    const seniority = escapeHtml(job.seniority);
+    const elapsed = escapeHtml(timeSinceApplied(job.date));
+
     const hiringHtml = hiringTeam
       ? hiringTeamUrl
         ? `<span class="hiring"><a href="${hiringTeamUrl}" target="_blank">${hiringTeam}</a></span>`
@@ -99,11 +121,15 @@ function renderJobs(jobs) {
           <span>${company}</span>
           <span>${location}</span>
           ${salary ? `<span class="salary">${salary}</span>` : ''}
+          ${applicants ? `<span class="applicants">${applicants}</span>` : ''}
           ${hiringHtml}
           <br>
           <span class="source-badge ${source === 'Indeed' ? 'indeed' : ''}">${source}</span>
           ${workType ? `<span>${workType}</span>` : ''}
+          ${seniority ? `<span class="seniority">${seniority}</span>` : ''}
+          ${education ? `<span class="education">${education}</span>` : ''}
           <span class="date-badge">${date}</span>
+          ${elapsed ? `<span class="elapsed">${elapsed}</span>` : ''}
         </div>
         <div class="status-row">
           <label>Status:</label>
@@ -139,9 +165,9 @@ function renderJobs(jobs) {
 }
 
 function jobsToCsv(jobs) {
-  const headers = ['Title', 'Company', 'Location', 'Salary', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Status', 'URL'];
+  const headers = ['Title', 'Company', 'Location', 'Salary', 'Applicants', 'Education', 'Seniority', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Time Since Applied', 'Status', 'URL'];
   const rows = jobs.map(j => [
-    j.title, j.company, j.location, j.salary, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, j.status, j.url
+    j.title, j.company, j.location, j.salary, j.applicants, j.education, j.seniority, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, timeSinceApplied(j.date), j.status, j.url
   ].map(v => `"${(v || '').replace(/"/g, '""')}"`));
   return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
 }
@@ -167,9 +193,9 @@ document.getElementById('exportCsv').addEventListener('click', async () => {
 document.getElementById('exportSheets').addEventListener('click', async () => {
   const jobs = await loadJobs();
   if (jobs.length === 0) return;
-  const headers = ['Title', 'Company', 'Location', 'Salary', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Status', 'URL'];
+  const headers = ['Title', 'Company', 'Location', 'Salary', 'Applicants', 'Education', 'Seniority', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Time Since Applied', 'Status', 'URL'];
   const data = [headers, ...jobs.map(j => [
-    j.title, j.company, j.location, j.salary, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, j.status, j.url
+    j.title, j.company, j.location, j.salary, j.applicants, j.education, j.seniority, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, timeSinceApplied(j.date), j.status, j.url
   ])];
   const tsvContent = data.map(row => row.map(cell => (cell || '').replace(/\t/g, ' ')).join('\t')).join('\n');
 
