@@ -76,14 +76,17 @@ async function saveJobs(jobs) {
 
 function renderJobs(jobs) {
   const list = document.getElementById('jobList');
-  const count = document.getElementById('jobCount');
+  const countEl = document.getElementById('jobCount');
+  const appliedEl = document.getElementById('appliedCount');
   const sortBy = document.getElementById('sortSelect').value;
   const sorted = sortJobs(jobs, sortBy);
 
-  count.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
+  countEl.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
+  const appliedTotal = jobs.filter(j => j.status === 'Applied').length;
+  appliedEl.textContent = `${appliedTotal} applied`;
 
   if (jobs.length === 0) {
-    list.innerHTML = '<div class="empty"><h2>No jobs saved yet</h2><p>Visit a job listing on LinkedIn or Indeed and click the "Save Job" button to start tracking.</p></div>';
+    list.innerHTML = '<div class="empty"><h2>No jobs saved yet</h2><p>Visit a job listing on LinkedIn or Indeed<br>and click "Save Job" to start tracking.</p></div>';
     return;
   }
 
@@ -99,62 +102,108 @@ function renderJobs(jobs) {
     const source = escapeHtml(job.source) || 'Manual';
     const workType = escapeHtml(job.workType);
     const date = escapeHtml(job.date);
-
-    const applicants = escapeHtml(job.applicants);
+    const applicants = escapeHtml((job.applicants || '').replace(/Promoted.*$/i, '').trim());
     const education = escapeHtml(job.education);
     const seniority = escapeHtml(job.seniority);
     const elapsed = escapeHtml(timeSinceApplied(job.date));
 
-    const hiringHtml = hiringTeam
-      ? hiringTeamUrl
-        ? `<span class="hiring"><a href="${hiringTeamUrl}" target="_blank">${hiringTeam}</a></span>`
-        : `<span class="hiring">${hiringTeam}</span>`
-      : '';
+    // Build detail rows — only include rows that have data
+    let detailRows = '';
+
+    // Compensation row
+    if (salary || applicants) {
+      detailRows += `<div class="detail-row">
+        ${salary ? `<span class="detail-value salary">${salary}</span>` : ''}
+        ${applicants ? `<span class="detail-value">${applicants}</span>` : ''}
+      </div>`;
+    }
+
+    // Qualifications row
+    if (seniority || education) {
+      detailRows += `<div class="detail-row">
+        ${seniority ? `<span class="detail-value">${seniority}</span>` : ''}
+        ${seniority && education ? `<span class="detail-value" style="color:#d6d3d1">·</span>` : ''}
+        ${education ? `<span class="detail-value">${education}</span>` : ''}
+      </div>`;
+    }
+
+    // Hiring team row
+    if (hiringTeam) {
+      const hiringHtml = hiringTeamUrl
+        ? `<a href="${hiringTeamUrl}" target="_blank">${hiringTeam}</a>`
+        : hiringTeam;
+      detailRows += `<div class="detail-row">
+        <span class="detail-label">Hiring contact</span>
+        <span class="detail-value">${hiringHtml}</span>
+      </div>`;
+    }
+
+    // Metadata row
+    detailRows += `<div class="detail-row">
+      ${workType ? `<span class="detail-tag">${workType}</span>` : ''}
+      <span class="detail-value" style="font-size:11px;color:#a8a29e">${date}</span>
+    </div>`;
 
     return `
       <div class="job-card" data-id="${id}">
-        <div class="job-title">
-          <a href="${url}" target="_blank">${title}</a>
-          <button class="delete-btn" data-id="${id}" title="Remove">&times;</button>
+        <div class="job-compact">
+          <div class="job-compact-content">
+            <div class="job-compact-top">
+              <span class="job-compact-title"><a href="${url}" target="_blank">${title}</a></span>
+            </div>
+            <div class="job-compact-sub">${company}<span class="dot">·</span>${location}</div>
+          </div>
+          <div class="chevron">▾</div>
         </div>
-        <div class="job-meta">
-          <span>${company}</span>
-          <span>${location}</span>
-          ${salary ? `<span class="salary">${salary}</span>` : ''}
-          ${applicants ? `<span class="applicants">${applicants}</span>` : ''}
-          ${hiringHtml}
-          <br>
-          <span class="source-badge ${source === 'Indeed' ? 'indeed' : ''}">${source}</span>
-          ${workType ? `<span>${workType}</span>` : ''}
-          ${seniority ? `<span class="seniority">${seniority}</span>` : ''}
-          ${education ? `<span class="education">${education}</span>` : ''}
-          <span class="date-badge">${date}</span>
-          ${elapsed ? `<span class="elapsed">${elapsed}</span>` : ''}
-        </div>
-        <div class="status-row">
-          <label>Status:</label>
-          <select class="status-select" data-id="${id}">
-            ${STATUS_OPTIONS.map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-          </select>
+        <div class="job-details">
+          <div class="job-details-inner">
+            ${detailRows}
+            <div class="detail-actions">
+              <div class="detail-actions-left">
+                <label>Status</label>
+                <select class="status-select" data-id="${id}">
+                  ${STATUS_OPTIONS.map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </div>
+              <button class="delete-btn" data-id="${id}">Remove</button>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }).join('');
 
+  // Expand / collapse
+  list.querySelectorAll('.job-compact').forEach(compact => {
+    compact.addEventListener('click', (e) => {
+      // Don't toggle when clicking the title link
+      if (e.target.closest('a')) return;
+      const card = compact.closest('.job-card');
+      card.classList.toggle('expanded');
+    });
+  });
+
+  // Status change
   list.querySelectorAll('.status-select').forEach(select => {
     select.addEventListener('change', async (e) => {
+      e.stopPropagation();
       const jobId = e.target.dataset.id;
       const jobs = await loadJobs();
       const job = jobs.find(j => j.id === jobId);
       if (job) {
         job.status = e.target.value;
         await saveJobs(jobs);
+        // Update applied count
+        const appliedTotal = jobs.filter(j => j.status === 'Applied').length;
+        document.getElementById('appliedCount').textContent = `${appliedTotal} applied`;
       }
     });
   });
 
+  // Delete
   list.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const jobId = e.target.dataset.id;
       const jobs = await loadJobs();
       const filtered = jobs.filter(j => j.id !== jobId);
@@ -203,16 +252,16 @@ document.getElementById('exportSheets').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(tsvContent);
     chrome.tabs.create({ url: 'https://sheets.new' });
-    btn.textContent = 'Copied! Paste in sheet';
-    setTimeout(() => { btn.textContent = 'Google Sheets'; }, 3000);
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Sheets'; }, 3000);
   } catch {
-    btn.textContent = 'Copy failed';
-    setTimeout(() => { btn.textContent = 'Google Sheets'; }, 2000);
+    btn.textContent = 'Failed';
+    setTimeout(() => { btn.textContent = 'Sheets'; }, 2000);
   }
 });
 
 document.getElementById('clearAll').addEventListener('click', async () => {
-  if (confirm('Are you sure you want to clear all saved jobs?')) {
+  if (confirm('Clear all saved jobs?')) {
     await saveJobs([]);
     renderJobs([]);
   }

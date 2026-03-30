@@ -37,11 +37,11 @@
 
     // Extract applicant count (e.g. "200 applicants", "Over 100 applicants", "Be among the first 25 applicants")
     const applicantMatch = allText.match(
-      /(?:over\s+)?([\d,]+)\s+applicants?/i
-    ) || allText.match(
-      /(?:be among the first\s+)([\d,]+)\s+applicants?/i
+      /(?:over\s+|be among the first\s+)?([\d,]+)\s+applicants?/i
     );
-    const applicants = applicantMatch ? applicantMatch[0].trim() : '';
+    let applicants = applicantMatch ? applicantMatch[0].trim() : '';
+    // Strip any trailing "Promoted" text that LinkedIn concatenates without whitespace
+    applicants = applicants.replace(/Promoted.*$/i, '').trim();
 
     const hiringTeamSection = Array.from(document.querySelectorAll('h2, h3'))
       .find(h => h.textContent.includes('Meet the hiring team'));
@@ -140,8 +140,9 @@
 
     // Indeed sometimes shows applicant count in hiring insights
     const pageText = document.body.textContent;
-    const applicantMatch = pageText.match(/(?:over\s+)?([\d,]+)\s+applicants?/i);
-    const applicants = applicantMatch ? applicantMatch[0].trim() : '';
+    const applicantMatch = pageText.match(/(?:over\s+|be among the first\s+)?([\d,]+)\s+applicants?/i);
+    let applicants = applicantMatch ? applicantMatch[0].trim() : '';
+    applicants = applicants.replace(/Promoted.*$/i, '').trim();
 
     return {
       id: crypto.randomUUID(),
