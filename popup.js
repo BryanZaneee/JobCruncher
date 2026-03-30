@@ -1,5 +1,8 @@
 const STATUS_OPTIONS = ['Applied', 'Contacted', 'No Response', 'Interviewed', 'Offer', 'Rejected'];
 
+const LINKEDIN_ICON = '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#0A66C2"/><path d="M7.5 10.5v6M7.5 7.5v.01M10.5 16.5v-3.75c0-1.5 1.5-1.5 1.5-1.5s1.5 0 1.5 1.5v3.75M10.5 10.5v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const INDEED_ICON = '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#003A9B"/><path d="M13.5 5c-1.1 0-2 .7-2 1.5S12.4 8 13.5 8s2-.7 2-1.5S14.6 5 13.5 5zm-1.5 5v8h3v-8h-3z" fill="#fff"/></svg>';
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str || '';
@@ -79,14 +82,21 @@ function renderJobs(jobs) {
   const countEl = document.getElementById('jobCount');
   const appliedEl = document.getElementById('appliedCount');
   const sortBy = document.getElementById('sortSelect').value;
-  const sorted = sortJobs(jobs, sortBy);
+  const sourceFilter = document.getElementById('sourceFilter').value;
 
   countEl.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
   const appliedTotal = jobs.filter(j => j.status === 'Applied').length;
   appliedEl.textContent = `${appliedTotal} applied`;
 
+  const filtered = sourceFilter === 'all' ? jobs : jobs.filter(j => j.source === sourceFilter);
+  const sorted = sortJobs(filtered, sortBy);
+
   if (jobs.length === 0) {
     list.innerHTML = '<div class="empty"><h2>No jobs saved yet</h2><p>Visit a job listing on LinkedIn or Indeed<br>and click "Save Job" to start tracking.</p></div>';
+    return;
+  }
+  if (sorted.length === 0) {
+    list.innerHTML = '<div class="empty"><h2>No matching jobs</h2><p>Try changing the source filter.</p></div>';
     return;
   }
 
@@ -144,9 +154,12 @@ function renderJobs(jobs) {
       <span class="detail-value" style="font-size:11px;color:#a8a29e">${date}</span>
     </div>`;
 
+    const sourceIcon = source === 'LinkedIn' ? LINKEDIN_ICON : source === 'Indeed' ? INDEED_ICON : '';
+
     return `
       <div class="job-card" data-id="${id}">
         <div class="job-compact">
+          ${sourceIcon ? `<div class="source-icon">${sourceIcon}</div>` : ''}
           <div class="job-compact-content">
             <div class="job-compact-top">
               <span class="job-compact-title"><a href="${url}" target="_blank">${title}</a></span>
@@ -226,6 +239,11 @@ document.getElementById('sortSelect').addEventListener('change', async () => {
   renderJobs(jobs);
 });
 
+document.getElementById('sourceFilter').addEventListener('change', async () => {
+  const jobs = await loadJobs();
+  renderJobs(jobs);
+});
+
 document.getElementById('exportCsv').addEventListener('click', async () => {
   const jobs = await loadJobs();
   if (jobs.length === 0) return;
@@ -242,22 +260,31 @@ document.getElementById('exportCsv').addEventListener('click', async () => {
 document.getElementById('exportSheets').addEventListener('click', async () => {
   const jobs = await loadJobs();
   if (jobs.length === 0) return;
-  const headers = ['Title', 'Company', 'Location', 'Salary', 'Applicants', 'Education', 'Seniority', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Time Since Applied', 'Status', 'URL'];
-  const data = [headers, ...jobs.map(j => [
-    j.title, j.company, j.location, j.salary, j.applicants, j.education, j.seniority, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, timeSinceApplied(j.date), j.status, j.url
-  ])];
-  const tsvContent = data.map(row => row.map(cell => (cell || '').replace(/\t/g, ' ')).join('\t')).join('\n');
-
   const btn = document.getElementById('exportSheets');
+
+  // Build CSV content for Google Sheets import
+  const csv = jobsToCsv(jobs);
+
+  // Copy to clipboard first (before opening tab steals focus)
   try {
-    await navigator.clipboard.writeText(tsvContent);
-    chrome.tabs.create({ url: 'https://sheets.new' });
+    await navigator.clipboard.writeText(csv);
     btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = 'Sheets'; }, 3000);
   } catch {
-    btn.textContent = 'Failed';
-    setTimeout(() => { btn.textContent = 'Sheets'; }, 2000);
+    // Fallback: use textarea-based copy
+    const textarea = document.createElement('textarea');
+    textarea.value = csv;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    btn.textContent = 'Copied!';
   }
+
+  // Open new Google Sheet
+  chrome.tabs.create({ url: 'https://sheets.new' });
+  setTimeout(() => { btn.textContent = 'Sheets'; }, 3000);
 });
 
 document.getElementById('clearAll').addEventListener('click', async () => {
