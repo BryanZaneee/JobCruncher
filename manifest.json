@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Job Application Tracker",
+  "name": "JobCruncher - Job Application Tracker",
   "version": "1.0",
-  "description": "Track jobs you apply to on LinkedIn and Indeed",
+  "description": "Track and manage job applications on LinkedIn & Indeed. Save jobs, export to CSV & Google Sheets, track application status.",
   "permissions": ["storage", "activeTab"],
   "action": {
     "default_popup": "popup.html",
