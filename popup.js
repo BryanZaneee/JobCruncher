@@ -1,4 +1,4 @@
-const STATUS_OPTIONS = ['Applied', 'Contacted', 'No Response', 'Interviewed', 'Offer', 'Rejected'];
+const STATUS_OPTIONS = ['Applied', 'Saved', 'Contacted', 'No Response', 'Interviewed', 'Offer', 'Rejected'];
 
 const LINKEDIN_ICON = '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#0A66C2"/><path d="M7.5 10.5v6M7.5 7.5v.01M10.5 16.5v-3.75c0-1.5 1.5-1.5 1.5-1.5s1.5 0 1.5 1.5v3.75M10.5 10.5v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const INDEED_ICON = '<svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#003A9B"/><path d="M13.5 5c-1.1 0-2 .7-2 1.5S12.4 8 13.5 8s2-.7 2-1.5S14.6 5 13.5 5zm-1.5 5v8h3v-8h-3z" fill="#fff"/></svg>';
@@ -86,7 +86,8 @@ function renderJobs(jobs) {
 
   countEl.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
   const appliedTotal = jobs.filter(j => j.status === 'Applied').length;
-  appliedEl.textContent = `${appliedTotal} applied`;
+  const savedTotal = jobs.filter(j => j.status === 'Saved').length;
+  appliedEl.textContent = `${appliedTotal} applied · ${savedTotal} saved`;
 
   const filtered = sourceFilter === 'all' ? jobs : jobs.filter(j => j.source === sourceFilter);
   const sorted = sortJobs(filtered, sortBy);
@@ -237,9 +238,10 @@ function renderJobs(jobs) {
       if (job) {
         job.status = e.target.value;
         await saveJobs(jobs);
-        // Update applied count
+        // Update counts
         const appliedTotal = jobs.filter(j => j.status === 'Applied').length;
-        document.getElementById('appliedCount').textContent = `${appliedTotal} applied`;
+        const savedTotal = jobs.filter(j => j.status === 'Saved').length;
+        document.getElementById('appliedCount').textContent = `${appliedTotal} applied · ${savedTotal} saved`;
       }
     });
   });

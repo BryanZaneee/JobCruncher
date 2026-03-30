@@ -183,11 +183,11 @@
     return null;
   }
 
-  async function autoSaveJob() {
+  async function autoSaveJob(status = 'Applied') {
     const job = getJobData();
     if (!job || !job.title) return;
 
-    job.status = 'Applied';
+    job.status = status;
 
     try {
       const { jobs = [] } = await chrome.storage.local.get('jobs');
@@ -196,10 +196,11 @@
       jobs.push(job);
       await chrome.storage.local.set({ jobs });
 
-      // Flash the save button green to confirm auto-save
+      // Flash the save button to confirm
       const btn = document.getElementById('jt-save-btn');
       if (btn) {
-        btn.textContent = 'Auto-saved!';
+        const label = status === 'Saved' ? 'Bookmarked!' : 'Auto-saved!';
+        btn.textContent = label;
         btn.style.background = '#16a34a';
         setTimeout(() => { btn.textContent = 'Save Job'; btn.style.background = '#2563eb'; }, 2500);
       }
@@ -223,12 +224,24 @@
     return false;
   }
 
-  // Listen for clicks on submit/apply buttons via event capturing
+  function isLinkedInSaveButton(el) {
+    if (!el || el.tagName !== 'BUTTON') return false;
+    const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+    // LinkedIn's native Save button: "Save [Job Title] at [Company]"
+    if (ariaLabel.startsWith('save ') && ariaLabel.includes(' at ')) return true;
+    // Also check for the button text being exactly "Save"
+    const text = el.textContent.trim().toLowerCase();
+    if (text === 'save' && el.closest('.jobs-apply-button--top-card, .job-details-jobs-unified-top-card__container')) return true;
+    return false;
+  }
+
+  // Listen for clicks on submit/apply and save buttons via event capturing
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (isSubmitButton(btn)) {
-      // Small delay to let the submission go through first
-      setTimeout(autoSaveJob, 500);
+      setTimeout(() => autoSaveJob('Applied'), 500);
+    } else if (isLinkedInSaveButton(btn)) {
+      setTimeout(() => autoSaveJob('Saved'), 500);
     }
   }, true);
 
