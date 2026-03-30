@@ -16,7 +16,6 @@
   transition: all 0.2s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-
 #jt-save-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
@@ -38,23 +37,19 @@
   flex-direction: column;
   overflow: hidden;
 }
-
-#jt-sidebar.jt-sidebar-open {
-  right: 0;
-}
+#jt-sidebar.jt-sidebar-open { right: 0; }
 
 #jt-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #0f172a, #1e293b);
   color: #f8fafc;
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
 }
-
 #jt-sidebar-close {
   background: none;
   border: none;
@@ -65,17 +60,13 @@
   line-height: 1;
   transition: color 0.15s;
 }
-
-#jt-sidebar-close:hover {
-  color: #fff;
-}
+#jt-sidebar-close:hover { color: #fff; }
 
 #jt-sidebar-list {
   flex: 1;
   overflow-y: auto;
   padding: 8px 12px 12px;
 }
-
 #jt-sidebar-list::-webkit-scrollbar { width: 4px; }
 #jt-sidebar-list::-webkit-scrollbar-track { background: transparent; }
 #jt-sidebar-list::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
@@ -88,53 +79,22 @@
   padding: 12px 14px;
   margin-bottom: 6px;
 }
+.jt-sb-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.jt-sb-title a { color: #1c1917; text-decoration: none; }
+.jt-sb-title a:hover { color: #2563eb; }
+.jt-sb-sub { font-size: 11px; color: #78716c; margin-bottom: 8px; }
+.jt-sb-fields { display: grid; grid-template-columns: 1fr 1fr; }
+.jt-sb-field { padding: 4px 0; font-size: 12px; color: #44403c; border-bottom: 1px solid #fafaf9; }
+.jt-sb-label { display: block; font-size: 10px; font-weight: 600; color: #a8a29e; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 1px; }
+.jt-sb-status { margin-top: 6px; padding-top: 6px; border-top: 1px solid #f5f5f4; font-size: 12px; color: #44403c; }
+.jt-sb-empty { padding: 40px 16px; text-align: center; color: #a8a29e; font-size: 13px; }
+.jt-sb-na { color: #a8a29e; font-style: italic; }
+.jt-sb-salary { color: #16a34a; font-weight: 600; }
+.jt-sb-link { color: #2563eb; text-decoration: none; }
+.jt-sb-link:hover { text-decoration: underline; }
 
-.jt-sb-title {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.jt-sb-title a {
-  color: #1c1917;
-  text-decoration: none;
-}
-
-.jt-sb-title a:hover {
-  color: #2563eb;
-}
-
-.jt-sb-sub {
-  font-size: 11px;
-  color: #78716c;
-  margin-bottom: 8px;
-}
-
-.jt-sb-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-}
-
-.jt-sb-field {
-  padding: 4px 0;
-  font-size: 12px;
-  color: #44403c;
-  border-bottom: 1px solid #fafaf9;
-}
-
-.jt-sb-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  color: #a8a29e;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 1px;
-}
-
-.jt-sb-status {
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid #f5f5f4;
-}
+/* ── Sidebar Benefits ── */
+.jt-sb-benefits { margin-top: 4px; border: 1px solid #e7e5e4; border-radius: 6px; overflow: hidden; }
+.jt-sb-benefits summary { padding: 5px 8px; font-size: 11px; font-weight: 600; cursor: pointer; background: #fafaf9; list-style: none; user-select: none; }
+.jt-sb-benefits summary::-webkit-details-marker { display: none; }
+.jt-sb-benefits ul { padding: 4px 8px 6px 22px; margin: 0; font-size: 11px; color: #57534e; line-height: 1.6; }
