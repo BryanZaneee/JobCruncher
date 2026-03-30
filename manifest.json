@@ -3,7 +3,7 @@
   "name": "JobCruncher - Job Application Tracker",
   "version": "1.0",
   "description": "Track and manage job applications on LinkedIn & Indeed. Save jobs, export to CSV & Google Sheets, track application status.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "scripting"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"

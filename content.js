@@ -285,4 +285,97 @@
 
   observer.observe(document.body, { childList: true, subtree: true });
   setTimeout(injectSaveButton, 1500);
+
+  // ── Sidebar ──
+  function toggleSidebar() {
+    const existing = document.getElementById('jt-sidebar');
+    if (existing) {
+      existing.classList.toggle('jt-sidebar-open');
+      return;
+    }
+
+    const sidebar = document.createElement('div');
+    sidebar.id = 'jt-sidebar';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'jt-sidebar-close';
+    closeBtn.textContent = '\u00D7';
+    closeBtn.addEventListener('click', () => sidebar.classList.remove('jt-sidebar-open'));
+
+    const header = document.createElement('div');
+    header.id = 'jt-sidebar-header';
+    header.innerHTML = '<span>JobCruncher</span>';
+    header.appendChild(closeBtn);
+
+    const listContainer = document.createElement('div');
+    listContainer.id = 'jt-sidebar-list';
+
+    sidebar.appendChild(header);
+    sidebar.appendChild(listContainer);
+    document.body.appendChild(sidebar);
+
+    // Force reflow then open
+    sidebar.offsetHeight;
+    sidebar.classList.add('jt-sidebar-open');
+
+    renderSidebar(listContainer);
+
+    // Re-render when storage changes
+    chrome.storage.onChanged.addListener(() => renderSidebar(listContainer));
+  }
+
+  async function renderSidebar(container) {
+    const { jobs = [] } = await chrome.storage.local.get('jobs');
+
+    if (jobs.length === 0) {
+      container.innerHTML = '<div style="padding:40px 16px;text-align:center;color:#a8a29e;font-size:13px;">No jobs saved yet</div>';
+      return;
+    }
+
+    const nl = (v) => v || '<span style="color:#a8a29e;font-style:italic">Not listed</span>';
+    const esc = (s) => { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+
+    container.innerHTML = jobs.map(job => {
+      const title = esc(job.title) || 'Untitled';
+      const company = esc(job.company) || 'Unknown';
+      const location = esc(job.location) || 'N/A';
+      const salary = job.salary ? `<span style="color:#16a34a;font-weight:600">${esc(job.salary)}</span>` : nl('');
+      const applicants = nl(esc((job.applicants || '').replace(/Promoted.*$/i, '').trim()));
+      const seniority = nl(esc(job.seniority));
+      const education = nl(esc(job.education));
+      const workType = nl(esc(job.workType));
+      const hiringTeam = job.hiringTeam
+        ? (job.hiringTeamUrl ? `<a href="${esc(job.hiringTeamUrl)}" target="_blank" style="color:#2563eb">${esc(job.hiringTeam)}</a>` : esc(job.hiringTeam))
+        : nl('');
+      const benefits = job.benefits
+        ? `<details style="margin-top:4px;border:1px solid #e7e5e4;border-radius:6px;overflow:hidden">
+            <summary style="padding:5px 8px;font-size:11px;font-weight:600;cursor:pointer;background:#fafaf9;list-style:none;user-select:none">Benefits</summary>
+            <ul style="padding:4px 8px 6px 22px;margin:0;font-size:11px;color:#57534e;line-height:1.6">${job.benefits.split(', ').map(b => `<li>${esc(b)}</li>`).join('')}</ul>
+          </details>`
+        : '';
+
+      return `<div class="jt-sb-card">
+        <div class="jt-sb-title"><a href="${esc(job.url)}" target="_blank">${title}</a></div>
+        <div class="jt-sb-sub">${company} · ${location}</div>
+        <div class="jt-sb-fields">
+          <div class="jt-sb-field"><span class="jt-sb-label">Salary</span>${salary}</div>
+          <div class="jt-sb-field"><span class="jt-sb-label">Applicants</span>${applicants}</div>
+          <div class="jt-sb-field"><span class="jt-sb-label">Experience</span>${seniority}</div>
+          <div class="jt-sb-field"><span class="jt-sb-label">Education</span>${education}</div>
+          <div class="jt-sb-field"><span class="jt-sb-label">Work Type</span>${workType}</div>
+          <div class="jt-sb-field"><span class="jt-sb-label">Hiring Contact</span>${hiringTeam}</div>
+        </div>
+        ${benefits}
+        <div class="jt-sb-status">
+          <span class="jt-sb-label">Status</span>
+          <span style="color:#44403c;font-size:12px">${esc(job.status)}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Listen for messages from popup
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === 'toggleSidebar') toggleSidebar();
+  });
 })();

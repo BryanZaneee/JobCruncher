@@ -122,62 +122,52 @@ function renderJobs(jobs) {
     // Build labeled detail fields
     let detailRows = '';
 
+    const notListed = '<span class="detail-value not-listed">Not listed</span>';
+
     // Salary
     detailRows += `<div class="detail-field">
       <span class="detail-label">Salary</span>
-      <span class="detail-value ${salary ? 'salary' : 'no-salary'}">${salaryDisplay}</span>
+      ${salary ? `<span class="detail-value salary">${salary}</span>` : notListed}
     </div>`;
 
     // Applicants
-    if (applicants) {
-      detailRows += `<div class="detail-field">
-        <span class="detail-label">Applicants</span>
-        <span class="detail-value">${applicants}</span>
-      </div>`;
-    }
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Applicants</span>
+      ${applicants ? `<span class="detail-value">${applicants}</span>` : notListed}
+    </div>`;
 
     // Experience level
-    if (seniority) {
-      detailRows += `<div class="detail-field">
-        <span class="detail-label">Experience Level</span>
-        <span class="detail-value">${seniority}</span>
-      </div>`;
-    }
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Experience Level</span>
+      ${seniority ? `<span class="detail-value">${seniority}</span>` : notListed}
+    </div>`;
 
     // Education
-    if (education) {
-      detailRows += `<div class="detail-field">
-        <span class="detail-label">Education</span>
-        <span class="detail-value">${education}</span>
-      </div>`;
-    }
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Education</span>
+      ${education ? `<span class="detail-value">${education}</span>` : notListed}
+    </div>`;
 
     // Work type
-    if (workType) {
-      detailRows += `<div class="detail-field">
-        <span class="detail-label">Work Type</span>
-        <span class="detail-value">${workType}</span>
-      </div>`;
-    }
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Work Type</span>
+      ${workType ? `<span class="detail-value">${workType}</span>` : notListed}
+    </div>`;
 
     // Days since applied
-    if (elapsed) {
-      detailRows += `<div class="detail-field">
-        <span class="detail-label">Applied</span>
-        <span class="detail-value">${elapsed}</span>
-      </div>`;
-    }
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Applied</span>
+      <span class="detail-value">${elapsed || 'Today'}</span>
+    </div>`;
 
     // Hiring team
-    if (hiringTeam) {
-      const hiringHtml = hiringTeamUrl
-        ? `<a href="${hiringTeamUrl}" target="_blank">${hiringTeam}</a>`
-        : hiringTeam;
-      detailRows += `<div class="detail-field">
-        <span class="detail-label">Hiring Contact</span>
-        <span class="detail-value">${hiringHtml}</span>
-      </div>`;
-    }
+    const hiringDisplay = hiringTeam
+      ? (hiringTeamUrl ? `<span class="detail-value"><a href="${hiringTeamUrl}" target="_blank">${hiringTeam}</a></span>` : `<span class="detail-value">${hiringTeam}</span>`)
+      : notListed;
+    detailRows += `<div class="detail-field">
+      <span class="detail-label">Hiring Contact</span>
+      ${hiringDisplay}
+    </div>`;
 
     // Date saved
     detailRows += `<div class="detail-field">
@@ -326,6 +316,13 @@ document.getElementById('clearAll').addEventListener('click', async () => {
     await saveJobs([]);
     renderJobs([]);
   }
+});
+
+document.getElementById('openSidebar').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+  chrome.tabs.sendMessage(tab.id, { action: 'toggleSidebar' });
+  window.close();
 });
 
 loadJobs().then(renderJobs);

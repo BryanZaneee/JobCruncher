@@ -1,3 +1,4 @@
+/* ── Save Button ── */
 #jt-save-btn {
   position: fixed;
   bottom: 24px;
@@ -19,4 +20,121 @@
 #jt-save-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+}
+
+/* ── Sidebar ── */
+#jt-sidebar {
+  position: fixed;
+  top: 0;
+  right: -380px;
+  width: 380px;
+  height: 100vh;
+  background: #fafaf9;
+  z-index: 999998;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: right 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#jt-sidebar.jt-sidebar-open {
+  right: 0;
+}
+
+#jt-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+#jt-sidebar-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+#jt-sidebar-close:hover {
+  color: #fff;
+}
+
+#jt-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+}
+
+#jt-sidebar-list::-webkit-scrollbar { width: 4px; }
+#jt-sidebar-list::-webkit-scrollbar-track { background: transparent; }
+#jt-sidebar-list::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+
+/* ── Sidebar Cards ── */
+.jt-sb-card {
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 6px;
+}
+
+.jt-sb-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.jt-sb-title a {
+  color: #1c1917;
+  text-decoration: none;
+}
+
+.jt-sb-title a:hover {
+  color: #2563eb;
+}
+
+.jt-sb-sub {
+  font-size: 11px;
+  color: #78716c;
+  margin-bottom: 8px;
+}
+
+.jt-sb-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.jt-sb-field {
+  padding: 4px 0;
+  font-size: 12px;
+  color: #44403c;
+  border-bottom: 1px solid #fafaf9;
+}
+
+.jt-sb-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #a8a29e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 1px;
+}
+
+.jt-sb-status {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #f5f5f4;
 }
