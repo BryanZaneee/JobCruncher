@@ -262,33 +262,26 @@ document.getElementById('exportSheets').addEventListener('click', async () => {
   if (jobs.length === 0) return;
   const btn = document.getElementById('exportSheets');
 
-  // Build CSV content for Google Sheets import
+  // Download CSV file first
   const csv = jobsToCsv(jobs);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `job-applications-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 
-  // Copy to clipboard first (before opening tab steals focus)
-  try {
-    await navigator.clipboard.writeText(csv);
-    btn.textContent = 'Copied!';
-  } catch {
-    // Fallback: use textarea-based copy
-    const textarea = document.createElement('textarea');
-    textarea.value = csv;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    btn.textContent = 'Copied!';
-  }
-
-  // Open new Google Sheet
-  chrome.tabs.create({ url: 'https://sheets.new' });
+  // Then open Google Sheets import page
+  chrome.tabs.create({ url: 'https://docs.google.com/spreadsheets/u/0/?tgif=c#import' });
+  btn.textContent = 'Downloaded!';
   setTimeout(() => { btn.textContent = 'Sheets'; }, 3000);
 });
 
 document.getElementById('clearAll').addEventListener('click', async () => {
-  if (confirm('Clear all saved jobs?')) {
+  const jobs = await loadJobs();
+  if (jobs.length === 0) return;
+  if (confirm(`This will permanently delete all ${jobs.length} saved job${jobs.length !== 1 ? 's' : ''}. This cannot be undone.\n\nAre you sure?`)) {
     await saveJobs([]);
     renderJobs([]);
   }
