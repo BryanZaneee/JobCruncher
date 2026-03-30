@@ -118,6 +118,55 @@
     return null;
   }
 
+  async function autoSaveJob() {
+    const job = getJobData();
+    if (!job || !job.title) return;
+
+    job.status = 'Applied';
+
+    try {
+      const { jobs = [] } = await chrome.storage.local.get('jobs');
+      const exists = jobs.some(j => j.url === job.url || (j.title === job.title && j.company === job.company));
+      if (exists) return;
+      jobs.push(job);
+      await chrome.storage.local.set({ jobs });
+
+      // Flash the save button green to confirm auto-save
+      const btn = document.getElementById('jt-save-btn');
+      if (btn) {
+        btn.textContent = 'Auto-saved!';
+        btn.style.background = '#16a34a';
+        setTimeout(() => { btn.textContent = 'Save Job'; btn.style.background = '#2563eb'; }, 2500);
+      }
+    } catch {}
+  }
+
+  function isSubmitButton(el) {
+    if (!el || el.tagName !== 'BUTTON') return false;
+    const text = el.textContent.trim().toLowerCase();
+    const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+    const combined = text + ' ' + ariaLabel;
+
+    // LinkedIn Easy Apply final submit
+    if (combined.includes('submit application')) return true;
+    // Indeed apply submit
+    if (combined.includes('submit your application')) return true;
+    if (combined.includes('apply now') && el.type === 'submit') return true;
+    // Indeed "Continue" on final step often submits
+    if (combined.includes('submit') && el.type === 'submit') return true;
+
+    return false;
+  }
+
+  // Listen for clicks on submit/apply buttons via event capturing
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (isSubmitButton(btn)) {
+      // Small delay to let the submission go through first
+      setTimeout(autoSaveJob, 500);
+    }
+  }, true);
+
   function injectSaveButton() {
     if (document.getElementById('jt-save-btn')) return true;
 
