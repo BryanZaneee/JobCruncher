@@ -115,18 +115,18 @@ function renderJobs(jobs) {
     const applicants = escapeHtml((job.applicants || '').replace(/Promoted.*$/i, '').trim());
     const education = escapeHtml(job.education);
     const seniority = escapeHtml(job.seniority);
+    const benefits = escapeHtml(job.benefits);
     const elapsed = escapeHtml(timeSinceApplied(job.date));
+    const salaryDisplay = salary || 'No salary listed';
 
     // Build detail rows — only include rows that have data
     let detailRows = '';
 
     // Compensation row
-    if (salary || applicants) {
-      detailRows += `<div class="detail-row">
-        ${salary ? `<span class="detail-value salary">${salary}</span>` : ''}
-        ${applicants ? `<span class="detail-value">${applicants}</span>` : ''}
-      </div>`;
-    }
+    detailRows += `<div class="detail-row">
+      <span class="detail-value ${salary ? 'salary' : 'no-salary'}">${salaryDisplay}</span>
+      ${applicants ? `<span class="detail-value">${applicants}</span>` : ''}
+    </div>`;
 
     // Qualifications row
     if (seniority || education) {
@@ -134,6 +134,14 @@ function renderJobs(jobs) {
         ${seniority ? `<span class="detail-value">${seniority}</span>` : ''}
         ${seniority && education ? `<span class="detail-value" style="color:#d6d3d1">·</span>` : ''}
         ${education ? `<span class="detail-value">${education}</span>` : ''}
+      </div>`;
+    }
+
+    // Benefits row
+    if (benefits) {
+      detailRows += `<div class="detail-row">
+        <span class="detail-label">Benefits</span>
+        <span class="detail-value">${benefits}</span>
       </div>`;
     }
 
@@ -227,9 +235,9 @@ function renderJobs(jobs) {
 }
 
 function jobsToCsv(jobs) {
-  const headers = ['Title', 'Company', 'Location', 'Salary', 'Applicants', 'Education', 'Seniority', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Time Since Applied', 'Status', 'URL'];
+  const headers = ['Title', 'Company', 'Location', 'Salary', 'Applicants', 'Education', 'Seniority', 'Benefits', 'Hiring Team', 'Hiring Team URL', 'Work Type', 'Source', 'Date Saved', 'Time Since Applied', 'Status', 'URL'];
   const rows = jobs.map(j => [
-    j.title, j.company, j.location, j.salary, j.applicants, j.education, j.seniority, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, timeSinceApplied(j.date), j.status, j.url
+    j.title, j.company, j.location, j.salary, j.applicants, j.education, j.seniority, j.benefits, j.hiringTeam, j.hiringTeamUrl, j.workType, j.source, j.date, timeSinceApplied(j.date), j.status, j.url
   ].map(v => `"${(v || '').replace(/"/g, '""')}"`));
   return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
 }

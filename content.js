@@ -85,6 +85,19 @@
     );
     const seniority = seniorityMatch ? cleanText(seniorityMatch[0]) : '';
 
+    // Extract featured benefits
+    // LinkedIn shows a "Featured benefits" h3 heading followed by a list of benefits
+    const benefitsHeading = Array.from(document.querySelectorAll('h3'))
+      .find(h => h.textContent.trim().toLowerCase().includes('featured benefits'));
+    let benefits = '';
+    if (benefitsHeading) {
+      const benefitsParent = benefitsHeading.closest('div, section') || benefitsHeading.parentElement;
+      const benefitItems = Array.from(benefitsParent.querySelectorAll('li'))
+        .map(li => cleanText(li.textContent))
+        .filter(Boolean);
+      benefits = benefitItems.join(', ');
+    }
+
     return {
       id: crypto.randomUUID(),
       title,
@@ -94,6 +107,7 @@
       applicants,
       education,
       seniority,
+      benefits,
       hiringTeam,
       hiringTeamUrl,
       workType,
@@ -153,6 +167,7 @@
       applicants,
       education: '',
       seniority: '',
+      benefits: '',
       hiringTeam,
       hiringTeamUrl,
       workType: '',
