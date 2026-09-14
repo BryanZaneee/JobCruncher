@@ -20,11 +20,13 @@ files.
 ## Usage
 
 **Saving.** Click **Save Job** on any listing under
-`linkedin.com/jobs/*` or `indeed.com/*`. The content script scrapes the title,
-company, location, salary, applicant count, education and seniority
+`linkedin.com/jobs/*` or `indeed.com/*`. On LinkedIn the content script scrapes
+the title, company, location, salary, applicant count, education and seniority
 requirements, work type, featured benefits, and the hiring contact's name and
-profile link, then stores the record with today's date. Fields the listing does
-not publish are recorded as "Not listed" rather than guessed.
+profile link, then stores the record with today's date. Indeed publishes less,
+so that scraper captures the title, company, location, salary, applicant count
+and hiring insight only. Fields the listing does not publish are stored empty
+and render as "Not listed" in the sidebar rather than being guessed.
 
 Two things save a job without you asking. Submitting an application on a
 supported site files it as **Applied**, and clicking LinkedIn's own Save button
